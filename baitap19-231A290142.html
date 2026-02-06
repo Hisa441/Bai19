@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eisenhower Matrix - 231A290142</title>
+    <style>
+        /* --- CSS: Giao diện Responsive & Thẩm mỹ --- */
+        :root {
+            --primary-color: #2980b9;
+            --bg-color: #ecf0f1;
+            /* Màu nền cho 4 ô ma trận */
+            --q1-bg: #ffebee; /* Đỏ nhạt */
+            --q2-bg: #e3f2fd; /* Xanh nhạt */
+            --q3-bg: #fffde7; /* Vàng nhạt */
+            --q4-bg: #f5f5f5; /* Xám nhạt */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Responsive: Mobile (màn hình nhỏ) chuyển thành 1 cột dọc */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100% !important; height: auto !important; padding: 20px 0; flex-direction: row !important; justify-content: center; gap: 20px; }
+            .avatar { width: 80px !important; height: 80px !important; margin-bottom: 0 !important; }
+            .info-text { text-align: left !important; }
+            .matrix-grid { grid-template-columns: 1fr !important; }
+        }
+
+        /* Cột trái: Thông tin sinh viên */
+        .sidebar {
+            width: 280px;
+            background-color: #34495e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 40px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .avatar {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%; /* Bo tròn ảnh */
+            object-fit: cover; /* Đảm bảo ảnh không bị méo */
+            border: 5px solid rgba(255,255,255,0.3);
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        .info-text { text-align: center; padding: 0 15px; }
+        .info-text h2 { margin: 5px 0; font-size: 1.4rem; font-weight: 600; }
+        .info-text p { margin: 5px 0; font-size: 1rem; opacity: 0.9; font-weight: 300; }
+
+        /* Cột phải: Bảng công việc */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        h1.page-title {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #bdc3c7;
+            padding-bottom: 10px;
+        }
+        
+        /* Form nhập liệu */
+        .input-group {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            min-width: 200px;
+        }
+
+        select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fff;
+            font-size: 0.95rem;
+        }
+
+        button.btn-add {
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button.btn-add:hover { background-color: #1a5276; }
+
+        /* Ma trận Eisenhower (Grid 2x2) */
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(2, minmax(250px, auto));
+            gap: 20px;
+            flex: 1;
+        }
+
+        .quadrant {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .quadrant:hover { transform: translateY(-3px); }
+
+        .quadrant h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Màu sắc từng ô */
+        #q1 { border-top: 5px solid #e74c3c; background-color: var(--q1-bg); } /* Đỏ */
+        #q1 h3 { color: #c0392b; }
+        
+        #q2 { border-top: 5px solid #3498db; background-color: var(--q2-bg); } /* Xanh */
+        #q2 h3 { color: #2980b9; }
+
+        #q3 { border-top: 5px solid #f1c40f; background-color: var(--q3-bg); } /* Vàng */
+        #q3 h3 { color: #d68910; }
+
+        #q4 { border-top: 5px solid #95a5a6; background-color: var(--q4-bg); } /* Xám */
+        #q4 h3 { color: #7f8c8d; }
+
+        /* Danh sách tasks */
+        .task-list { list-style: none; padding: 0; margin: 0; flex: 1; }
+        
+        .task-item {
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 5px;
+            opacity: 0.6;
+        }
+        .btn-delete:hover { opacity: 1; transform: scale(1.1); }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <img src="avatar.jpg" alt="Nguyen Thi Thanh Tuyen" class="avatar">
+        
+        <div class="info-text">
+            <h2>Nguyễn Thị Thanh Tuyền</h2> <p>MSSV: 231A290142</p>
+            <p>Lớp: LTW HK2 INT440704</p>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h1 class="page-title">TODO MATRIX (Eisenhower)</h1>
+        
+        <div class="input-group">
+            <input type="text" id="taskName" placeholder="Nhập tên công việc cần làm...">
+            <select id="taskPriority">
+                <option value="1">1. Quan trọng & Khẩn cấp (Làm ngay)</option>
+                <option value="2">2. Quan trọng - Ko Khẩn cấp (Lên lịch)</option>
+                <option value="3">3. Ko Quan trọng - Khẩn cấp (Ủy quyền)</option>
+                <option value="4">4. Ko Quan trọng - Ko Khẩn cấp (Xóa bỏ)</option>
+            </select>
+            <button class="btn-add" onclick="addTask()">+ Thêm Việc</button>
+        </div>
+
+        <div class="matrix-grid">
+            <div class="quadrant" id="q1">
+                <h3>🔥 Làm Ngay (Do First)</h3>
+                <ul class="task-list" id="list-1"></ul>
+            </div>
+            <div class="quadrant" id="q2">
+                <h3>📅 Lên Lịch (Schedule)</h3>
+                <ul class="task-list" id="list-2"></ul>
+            </div>
+            <div class="quadrant" id="q3">
+                <h3>🏃 Ủy Quyền (Delegate)</h3>
+                <ul class="task-list" id="list-3"></ul>
+            </div>
+            <div class="quadrant" id="q4">
+                <h3>🗑️ Xóa Bỏ (Don't Do)</h3>
+                <ul class="task-list" id="list-4"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CẤU HÌNH BÀI TẬP ---
+        const MY_MSSV = "231A290142"; // Số đuôi là 2 (Chẵn)
+        const STORAGE_KEY = `tasks_${MY_MSSV}`; // Key: tasks_231A290142
+
+        // Hàm xác định màu chữ dựa trên MSSV
+        function getMssvColor() {
+            const lastDigit = parseInt(MY_MSSV.slice(-1)); // Lấy số 2
+            // Nếu chẵn -> Màu Đỏ, Nếu lẻ -> Màu Xanh
+            return (lastDigit % 2 === 0) ? "red" : "blue"; 
+        }
+
+        // Tải dữ liệu khi mở trang
+        document.addEventListener("DOMContentLoaded", loadTasks);
+
+        function addTask() {
+            const nameInput = document.getElementById("taskName");
+            const priorityInput = document.getElementById("taskPriority");
+            
+            const taskName = nameInput.value.trim();
+            const priority = priorityInput.value;
+
+            if (taskName === "") {
+                alert("Bạn chưa nhập tên công việc!");
+                return;
+            }
+
+            // --- LOGIC CHỐNG AI (Theo đề bài) ---
+            // Nếu tên dài > 10 ký tự -> Đổi màu
+            let textColor = "#333"; // Màu mặc định
+            if (taskName.length > 10) {
+                textColor = getMssvColor(); // Trả về 'red' vì số đuôi 2
+            }
+
+            const newTask = {
+                id: Date.now(),
+                name: taskName,
+                priority: priority,
+                color: textColor
+            };
+
+            saveTask(newTask);
+            renderTask(newTask);
+            nameInput.value = ""; // Xóa ô nhập sau khi thêm
+        }
+
+        function saveTask(task) {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            tasks.push(task);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            tasks.forEach(task => renderTask(task));
+        }
+
+        function renderTask(task) {
+            const ul = document.getElementById(`list-${task.priority}`);
+            const li = document.createElement("li");
+            li.className = "task-item";
+            li.id = `task-${task.id}`;
+            
+            li.innerHTML = `
+                <span style="color: ${task.color}; width: 90%; word-break: break-word;">${task.name}</span>
+                <button class="btn-delete" onclick="deleteTask(${task.id})" title="Xóa">×</button>
+            `;
+            ul.appendChild(li);
+        }
+
+        function deleteTask(id) {
+            if(!confirm("Bạn chắc chắn muốn xóa công việc này?")) return;
+
+            // Xóa trong LocalStorage
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            tasks = tasks.filter(t => t.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+
+            // Xóa trên giao diện
+            const el = document.getElementById(`task-${id}`);
+            if(el) el.remove();
+        }
+    </script>
+</body>
+</html>
